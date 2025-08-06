@@ -7,12 +7,13 @@ def scrape_hulyo_flights():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto("https://www.hulyo.co.il/flights", timeout=60000)
-        page.wait_for_timeout(5000)
-
+        page.wait_for_selector(".flight-tile", timeout=15000)
 
         flights = []
 
         cards = page.query_selector_all(".flight-tile")
+        print(f"Found {len(cards)} flight tiles")
+
         for card in cards:
             try:
                 destination = card.query_selector(".destination-name").inner_text().strip()
