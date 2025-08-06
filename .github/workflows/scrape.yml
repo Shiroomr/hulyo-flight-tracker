@@ -1,39 +1,42 @@
-name: Run Hulyo Scraper
+name: Hulyo Scraper
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # 08:00 Israel time (05:00 UTC)
-    - cron: '0 17 * * *' # 20:00 Israel time (17:00 UTC)
-  workflow_dispatch:     # Allow manual runs too
+    - cron: "0 7,19 * * *"  # Runs twice daily at 07:00 and 19:00 UTC
+  workflow_dispatch:       # Allows manual trigger
 
 jobs:
   scrape:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: 3.10
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        python -m playwright install chromium
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright
+          playwright install chromium
 
-    - name: Run scraper
-      run: python -u hulyo_scraper.py
-      
-    - name: Upload HTML snapshot
-      uses: actions/upload-artifact@v4
-      with:
-        name: debug-html
-        path: page_snapshot.html
-        
-    - name: Upload result CSV
-      uses: actions/upload-artifact@v4
-      with:
-        name: hulyo-flights
-        path: hulyo_flights.csv
+      - name: Run scraper
+        run: python -u hulyo_scraper.py
+
+      - name: Upload scraped flights CSV
+        uses: actions/upload-artifact@v4
+        with:
+          name: hulyo_flights
+          path: hulyo_flights.csv
+          if-no-files-found: warn
+
+      - name: Upload HTML snapshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-html
+          path: page_snapshot_*.html
+          if-no-files-found: ignore
