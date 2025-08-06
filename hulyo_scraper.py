@@ -8,8 +8,10 @@ def scrape_hulyo_flights():
         page = browser.new_page()
         page.goto("https://www.hulyo.co.il/flights", timeout=60000)
 
-        page.wait_for_load_state("networkidle", timeout=30000)
-        time.sleep(5)
+        # Wait for main destination headers to appear
+        page.wait_for_selector("h3._title_vvfcu_59", timeout=30000)
+        print("✅ Page loaded, destinations found", flush=True)
+
 
         page.wait_for_selector("li._root_vvfcu_1", timeout=20000)
         destinations = page.query_selector_all("li._root_vvfcu_1")
