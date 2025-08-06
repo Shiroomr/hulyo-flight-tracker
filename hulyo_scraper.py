@@ -10,9 +10,10 @@ def scrape_hulyo_flights():
         page.wait_for_selector(".flight-tile", timeout=15000)
 
         flights = []
+        print(page.content(), flush=True)
 
         cards = page.query_selector_all(".flight-tile")
-        print(f"Found {len(cards)} flight tiles")
+        print(f"Found {len(cards)} flight tiles", flush=True)
 
         for card in cards:
             try:
