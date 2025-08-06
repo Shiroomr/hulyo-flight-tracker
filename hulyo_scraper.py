@@ -8,103 +8,71 @@ def scrape_hulyo_flights():
         page = browser.new_page()
         page.goto("https://www.hulyo.co.il/flights", timeout=60000)
 
-        # Wait for the page to load and JS to hydrate content
-        page.wait_for_load_state("networkidle", timeout=30000)  # waits until no network requests for 500ms
-        
-        # Optional: give the JS framework a bit of extra time to render
-        time.sleep(5)
-        
-        # Then wait for the destination thumbnails to appear
         page.wait_for_load_state("networkidle", timeout=30000)
         time.sleep(5)
-        
-        # DEBUG: save and print full HTML before failing on missing selector
-        html = page.content()
-        with open("page_debug_before_wait.html", "w", encoding="utf-8") as f:
-            f.write(html)
-        print("🔍 Saved HTML snapshot before waiting for .destination-name", flush=True)
-        
-       # Wait for destination tiles
-        page.wait_for_selector(".destination-tile", timeout=20000)
-        tiles = page.query_selector_all(".destination-tile")
-        print(f"✅ Found {len(tiles)} destination tiles", flush=True)
-        
-        if tiles:
-            tiles[0].scroll_into_view_if_needed()
-            time.sleep(1)
-            tiles[0].click()
-            print("🖱️ Clicked first destination tile", flush=True)
-        
-        try:
-            page.wait_for_selector(".flight-tile", timeout=15000)
-            print("✅ .flight-tile appeared", flush=True)
-        except:
-            print("⚠️ .flight-tile did NOT appear", flush=True)
-        
-        # Always save HTML after click
-        html_after_click = page.content()
-        with open("page_after_click.html", "w", encoding="utf-8") as f:
-            f.write(html_after_click)
-        print("📄 Saved HTML after click for debug", flush=True)
 
-
-
-
-        destination_cards = page.query_selector_all(".destination-name")
-        print(f"Found {len(destination_cards)} destination tiles", flush=True)
+        page.wait_for_selector("li._root_vvfcu_1", timeout=20000)
+        destinations = page.query_selector_all("li._root_vvfcu_1")
+        print(f"✅ Found {len(destinations)} destinations", flush=True)
 
         flights = []
 
-        for i, dest in enumerate(destination_cards):
+        for i, dest in enumerate(destinations):
             try:
-                # Re-query because the DOM gets refreshed each time
-                destination_cards = page.query_selector_all(".destination-name")
-                current_dest = destination_cards[i]
+                destinations = page.query_selector_all("li._root_vvfcu_1")
+                current_dest = destinations[i]
 
-                # Scroll into view and click
                 current_dest.scroll_into_view_if_needed()
-                time.sleep(0.5)
+                time.sleep(1)
                 current_dest.click()
-                print(f"🛫 Clicked destination {i + 1}/{len(destination_cards)}", flush=True)
+                print(f"🛫 Clicked destination {i + 1}/{len(destinations)}", flush=True)
 
-                # Wait for flight tiles to appear
-                try:
-                    page.wait_for_selector(".flight-tile", timeout=15000)
-                except:
-                    print(f"⚠️ No .flight-tile found for destination {i + 1}", flush=True)
-                    continue
+                page.wait_for_selector("li._root_tz483_1", timeout=15000)
+                date_options = page.query_selector_all("li._root_tz483_1")
+                print(f"📅 Found {len(date_options)} departure dates", flush=True)
 
-                # Snapshot for debug
-                with open(f"page_snapshot_{i+1}.html", "w", encoding="utf-8") as f:
-                    f.write(page.content())
-
-                cards = page.query_selector_all(".flight-tile")
-                print(f"🧳 Found {len(cards)} flights for destination {i + 1}", flush=True)
-
-                for card in cards:
+                for j, date_option in enumerate(date_options):
                     try:
-                        destination = card.query_selector(".destination-name").inner_text().strip()
-                        dates = card.query_selector(".flight-dates").inner_text().strip()
-                        price = card.query_selector(".price").inner_text().strip()
+                        date_options = page.query_selector_all("li._root_tz483_1")
+                        current_date = date_options[j]
+                        current_date.scroll_into_view_if_needed()
+                        time.sleep(0.5)
+                        current_date.click()
+                        print(f"📆 Clicked departure date {j + 1}/{len(date_options)}", flush=True)
 
-                        flights.append({
-                            "destination": destination,
-                            "dates": dates,
-                            "price": price
-                        })
+                        page.wait_for_selector("li._root-v2-FLIGHTS_1h6v0_21", timeout=15000)
+                        flight_cards = page.query_selector_all("li._root-v2-FLIGHTS_1h6v0_21")
+                        print(f"🧳 Found {len(flight_cards)} flights", flush=True)
+
+                        for card in flight_cards:
+                            try:
+                                labels = card.query_selector_all("._label-v2_1h6v0_75")
+                                times = card.query_selector_all("._label-v2_1h6v0_75 ._time-prefix-label_1h6v0_239")
+                                price = card.query_selector("._price-v2_1h6v0_102").inner_text().strip()
+                                currency = card.query_selector("._currency-v2-FLIGHTS_1h6v0_109").inner_text().strip()
+                                flights.append({
+                                    "departure_date": labels[0].inner_text().strip() if labels else "",
+                                    "return_date": labels[1].inner_text().strip() if len(labels) > 1 else "",
+                                    "departure_time": labels[2].inner_text().strip() if len(labels) > 2 else "",
+                                    "return_time": labels[3].inner_text().strip() if len(labels) > 3 else "",
+                                    "price": f"{price} {currency}"
+                                })
+                            except Exception as e:
+                                print(f"❌ Error extracting flight: {e}", flush=True)
+
                     except Exception as e:
-                        print(f"❌ Error extracting card: {e}", flush=True)
+                        print(f"⚠️ Error with departure date {j + 1}: {e}", flush=True)
 
-                # Click "Back" if needed (or reload the page)
                 page.goto("https://www.hulyo.co.il/flights", timeout=60000)
-                page.wait_for_selector(".destination-name", timeout=15000)
+                page.wait_for_selector("li._root_vvfcu_1", timeout=15000)
+                time.sleep(2)
 
             except Exception as e:
                 print(f"❌ Error with destination {i + 1}: {e}", flush=True)
 
         if flights:
             with open("hulyo_flights.csv", "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=["destination", "dates", "price"])
+                writer = csv.DictWriter(f, fieldnames=["departure_date", "return_date", "departure_time", "return_time", "price"])
                 writer.writeheader()
                 writer.writerows(flights)
             print("✅ All flights saved to hulyo_flights.csv", flush=True)
