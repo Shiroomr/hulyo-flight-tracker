@@ -8,8 +8,15 @@ def scrape_hulyo_flights():
         page = browser.new_page()
         page.goto("https://www.hulyo.co.il/flights", timeout=60000)
 
-        # Wait for destination tiles to appear
-        page.wait_for_selector(".destination-name", timeout=15000)
+        # Wait for the page to load and JS to hydrate content
+        page.wait_for_load_state("networkidle", timeout=30000)  # waits until no network requests for 500ms
+        
+        # Optional: give the JS framework a bit of extra time to render
+        time.sleep(5)
+        
+        # Then wait for the destination thumbnails to appear
+        page.wait_for_selector(".destination-name", timeout=20000)
+
         destination_cards = page.query_selector_all(".destination-name")
         print(f"Found {len(destination_cards)} destination tiles", flush=True)
 
