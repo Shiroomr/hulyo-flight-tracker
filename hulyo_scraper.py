@@ -15,7 +15,18 @@ def scrape_hulyo_flights():
         time.sleep(5)
         
         # Then wait for the destination thumbnails to appear
+        page.wait_for_load_state("networkidle", timeout=30000)
+        time.sleep(5)
+        
+        # DEBUG: save and print full HTML before failing on missing selector
+        html = page.content()
+        with open("page_debug_before_wait.html", "w", encoding="utf-8") as f:
+            f.write(html)
+        print("🔍 Saved HTML snapshot before waiting for .destination-name", flush=True)
+        
+        # Try finding the element now
         page.wait_for_selector(".destination-name", timeout=20000)
+
 
         destination_cards = page.query_selector_all(".destination-name")
         print(f"Found {len(destination_cards)} destination tiles", flush=True)
