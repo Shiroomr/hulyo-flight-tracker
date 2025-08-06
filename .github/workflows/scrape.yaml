@@ -23,6 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install playwright
           playwright install chromium
+          
       - name: Run scraper
         run: python -u hulyo_scraper.py
 
@@ -47,6 +48,14 @@ jobs:
           name: debug-html
           path: page_snapshot_*.html
           if-no-files-found: ignore
+
+      - name: Upload HTML snapshot after clicking destination
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-after-click
+          path: page_after_click.html
+          if-no-files-found: warn    
 
       - name: Upload debug HTML
         uses: actions/upload-artifact@v4
