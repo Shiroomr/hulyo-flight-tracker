@@ -6,8 +6,9 @@ def scrape_hulyo_flights():
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
-        page.goto(httpswww.hulyo.co.ilflights, timeout=60000)
-        page.wait_for_timeout(5000)  # wait for JS to render (can tweak)
+        page.goto("https://www.hulyo.co.il/flights", timeout=60000)
+        page.wait_for_timeout(5000)
+
 
         flights = []
 
