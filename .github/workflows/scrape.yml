@@ -25,7 +25,13 @@ jobs:
 
     - name: Run scraper
       run: python -u hulyo_scraper.py
-
+      
+    - name: Upload HTML snapshot
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-html
+        path: page_snapshot.html
+        
     - name: Upload result CSV
       uses: actions/upload-artifact@v4
       with:
