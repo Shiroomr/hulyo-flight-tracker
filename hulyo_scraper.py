@@ -7,15 +7,23 @@ def scrape_hulyo_flights():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto("https://www.hulyo.co.il/flights", timeout=60000)
-        page.wait_for_selector(".flight-tile", timeout=15000)
+        try:
+            page.wait_for_selector(".flight-tile", timeout=15000)
+        except:
+            print("⚠️ .flight-tile selector not found in time", flush=True)
 
-        # Save what Playwright actually sees
+        # Save the actual HTML content for inspection
+        html = page.content()
         with open("page_snapshot.html", "w", encoding="utf-8") as f:
-            f.write(page.content())
+            f.write(html)
+        
+        print("✅ Page snapshot written", flush=True)
             
         flights = []
-        print(page.content(), flush=True)
-
+        # Print a snippet of the content (optional for logs)
+        print(html[:1000], flush=True)
+        
+        # Now try to extract flight tiles
         cards = page.query_selector_all(".flight-tile")
         print(f"Found {len(cards)} flight tiles", flush=True)
 
