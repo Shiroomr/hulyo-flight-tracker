@@ -35,15 +35,18 @@ def scrape_hulyo_flights():
             tiles[0].click()
             print("🖱️ Clicked first destination tile", flush=True)
         
-            # Wait for the flight data to load
-            try:
-                page.wait_for_selector(".flight-tile", timeout=15000)
-            except:
-                print("⚠️ No .flight-tile appeared after clicking", flush=True)
-            
-            with open("page_after_click.html", "w", encoding="utf-8") as f:
-                f.write(page.content())
-            print("📄 Saved HTML after click for debug", flush=True)
+        try:
+            page.wait_for_selector(".flight-tile", timeout=15000)
+            print("✅ .flight-tile appeared", flush=True)
+        except:
+            print("⚠️ .flight-tile did NOT appear", flush=True)
+        
+        # Always save HTML after click
+        html_after_click = page.content()
+        with open("page_after_click.html", "w", encoding="utf-8") as f:
+            f.write(html_after_click)
+        print("📄 Saved HTML after click for debug", flush=True)
+
 
 
 
