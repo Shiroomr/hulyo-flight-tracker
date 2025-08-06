@@ -9,6 +9,10 @@ def scrape_hulyo_flights():
         page.goto("https://www.hulyo.co.il/flights", timeout=60000)
         page.wait_for_selector(".flight-tile", timeout=15000)
 
+        # Save what Playwright actually sees
+        with open("page_snapshot.html", "w", encoding="utf-8") as f:
+            f.write(page.content())
+            
         flights = []
         print(page.content(), flush=True)
 
