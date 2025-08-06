@@ -39,3 +39,14 @@ jobs:
           name: debug-html
           path: page_snapshot_*.html
           if-no-files-found: ignore
+
+      - name: Upload debug HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-before-wait
+          path: page_debug_before_wait.html
+          if-no-files-found: warn
+    
+
+
+
