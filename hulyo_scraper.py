@@ -1,8 +1,13 @@
 from playwright.sync_api import sync_playwright
 import csv
 import time
+from datetime import datetime
+from dateutil import parser
 
 def scrape_hulyo_flights(max_flights_to_extract=100):
+    extraction_date_obj = datetime.now().date()
+    extraction_date_str = extraction_date_obj.strftime("%Y-%m-%d")
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -62,13 +67,24 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                                 price = card.query_selector("._price-v2_1h6v0_102").inner_text().strip()
                                 currency = card.query_selector("._currency-v2-FLIGHTS_1h6v0_109").inner_text().strip()
 
+                                departure_str = labels[0].inner_text().strip() if labels else ""
+
+                                try:
+                                    # Attempt to parse Hebrew date like '11.08.25'
+                                    departure_obj = datetime.strptime(departure_str.split()[0], "%d.%m.%y").date()
+                                    delta_days = (departure_obj - extraction_date_obj).days
+                                except Exception:
+                                    delta_days = ""
+    
                                 flights.append({
                                     "destination": destination_name,
                                     "departure_date": labels[0].inner_text().strip() if len(labels) > 0 else "",
                                     "return_date": labels[1].inner_text().strip() if len(labels) > 1 else "",
                                     "departure_time": labels[2].inner_text().strip() if len(labels) > 2 else "",
                                     "return_time": labels[3].inner_text().strip() if len(labels) > 3 else "",
-                                    "price": f"{price} {currency}"
+                                    "price": f"{price} {currency}",
+                                    "extractionDate": extraction_date_str,
+                                    "delta_days": delta_days
                                 })
                                 flight_count += 1
                             except Exception as e:
@@ -88,7 +104,7 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
             with open("hulyo_flights.csv", "w", newline="", encoding="utf-8-sig") as f:
                 writer = csv.DictWriter(f, fieldnames=[
                     "destination", "departure_date", "return_date",
-                    "departure_time", "return_time", "price"
+                    "departure_time", "return_time", "price", "extractionDate", "delta_days"
                 ])
                 writer.writeheader()
                 writer.writerows(flights)
