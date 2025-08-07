@@ -2,13 +2,12 @@ from playwright.sync_api import sync_playwright
 import csv
 import time
 
-def scrape_hulyo_flights():
+def scrape_hulyo_flights(max_flights_to_extract=100):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto("https://www.hulyo.co.il/flights", timeout=60000)
 
-        # Wait for main destination headers to appear
         page.wait_for_selector("h3._title_vvfcu_59", timeout=30000)
         print("✅ Page loaded, destinations found", flush=True)
 
@@ -17,13 +16,16 @@ def scrape_hulyo_flights():
         print(f"✅ Found {len(destinations)} destinations", flush=True)
 
         flights = []
+        flight_count = 0
 
         for i, dest in enumerate(destinations):
+            if flight_count >= max_flights_to_extract:
+                break
+
             try:
                 destinations = page.query_selector_all("li._root_vvfcu_1")
                 current_dest = destinations[i]
 
-                # Extract destination name
                 destination_name_elem = current_dest.query_selector("h3._title_vvfcu_59")
                 destination_name = destination_name_elem.inner_text().strip() if destination_name_elem else f"Destination {i+1}"
 
@@ -37,6 +39,9 @@ def scrape_hulyo_flights():
                 print(f"📅 Found {len(date_options)} departure dates", flush=True)
 
                 for j, date_option in enumerate(date_options):
+                    if flight_count >= max_flights_to_extract:
+                        break
+
                     try:
                         date_options = page.query_selector_all("li._root_tz483_1")
                         current_date = date_options[j]
@@ -50,6 +55,8 @@ def scrape_hulyo_flights():
                         print(f"🧳 Found {len(flight_cards)} flights", flush=True)
 
                         for card in flight_cards:
+                            if flight_count >= max_flights_to_extract:
+                                break
                             try:
                                 labels = card.query_selector_all("._label-v2_1h6v0_75")
                                 price = card.query_selector("._price-v2_1h6v0_102").inner_text().strip()
@@ -63,6 +70,7 @@ def scrape_hulyo_flights():
                                     "return_time": labels[3].inner_text().strip() if len(labels) > 3 else "",
                                     "price": f"{price} {currency}"
                                 })
+                                flight_count += 1
                             except Exception as e:
                                 print(f"❌ Error extracting flight: {e}", flush=True)
 
@@ -84,11 +92,11 @@ def scrape_hulyo_flights():
                 ])
                 writer.writeheader()
                 writer.writerows(flights)
-            print("✅ All flights saved to hulyo_flights.csv", flush=True)
+            print(f"✅ {flight_count} flights saved to hulyo_flights.csv", flush=True)
         else:
             print("⚠️ No flights scraped", flush=True)
 
         browser.close()
 
 if __name__ == "__main__":
-    scrape_hulyo_flights()
+    scrape_hulyo_flights(max_flights_to_extract=100)
