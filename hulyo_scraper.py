@@ -104,6 +104,7 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                                     delta_days = ""
 
                                 flights.append({
+                                    "destination_name": destination_name,
                                     "departure_date": departure_date_str,
                                     "departure_weekday": departure_weekday,
                                     "return_date": return_date_str,
@@ -132,6 +133,7 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
         if flights:
             with open("hulyo_flights.csv", "w", newline="", encoding="utf-8-sig") as f:
                 writer = csv.DictWriter(f, fieldnames=[
+                    "destination_name",
                     "departure_date",
                     "departure_weekday",
                     "return_date",
