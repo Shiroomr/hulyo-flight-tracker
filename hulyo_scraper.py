@@ -12,7 +12,6 @@ def scrape_hulyo_flights():
         page.wait_for_selector("h3._title_vvfcu_59", timeout=30000)
         print("✅ Page loaded, destinations found", flush=True)
 
-
         page.wait_for_selector("li._root_vvfcu_1", timeout=20000)
         destinations = page.query_selector_all("li._root_vvfcu_1")
         print(f"✅ Found {len(destinations)} destinations", flush=True)
@@ -24,10 +23,14 @@ def scrape_hulyo_flights():
                 destinations = page.query_selector_all("li._root_vvfcu_1")
                 current_dest = destinations[i]
 
+                # Extract destination name
+                destination_name_elem = current_dest.query_selector("h3._title_vvfcu_59")
+                destination_name = destination_name_elem.inner_text().strip() if destination_name_elem else f"Destination {i+1}"
+
                 current_dest.scroll_into_view_if_needed()
                 time.sleep(1)
                 current_dest.click()
-                print(f"🛫 Clicked destination {i + 1}/{len(destinations)}", flush=True)
+                print(f"🛫 Clicked destination {i + 1}/{len(destinations)}: {destination_name}", flush=True)
 
                 page.wait_for_selector("li._root_tz483_1", timeout=15000)
                 date_options = page.query_selector_all("li._root_tz483_1")
@@ -49,11 +52,12 @@ def scrape_hulyo_flights():
                         for card in flight_cards:
                             try:
                                 labels = card.query_selector_all("._label-v2_1h6v0_75")
-                                times = card.query_selector_all("._label-v2_1h6v0_75 ._time-prefix-label_1h6v0_239")
                                 price = card.query_selector("._price-v2_1h6v0_102").inner_text().strip()
                                 currency = card.query_selector("._currency-v2-FLIGHTS_1h6v0_109").inner_text().strip()
+
                                 flights.append({
-                                    "departure_date": labels[0].inner_text().strip() if labels else "",
+                                    "destination": destination_name,
+                                    "departure_date": labels[0].inner_text().strip() if len(labels) > 0 else "",
                                     "return_date": labels[1].inner_text().strip() if len(labels) > 1 else "",
                                     "departure_time": labels[2].inner_text().strip() if len(labels) > 2 else "",
                                     "return_time": labels[3].inner_text().strip() if len(labels) > 3 else "",
@@ -74,7 +78,10 @@ def scrape_hulyo_flights():
 
         if flights:
             with open("hulyo_flights.csv", "w", newline="", encoding="utf-8") as f:
-                writer = csv.DictWriter(f, fieldnames=["departure_date", "return_date", "departure_time", "return_time", "price"])
+                writer = csv.DictWriter(f, fieldnames=[
+                    "destination", "departure_date", "return_date",
+                    "departure_time", "return_time", "price"
+                ])
                 writer.writeheader()
                 writer.writerows(flights)
             print("✅ All flights saved to hulyo_flights.csv", flush=True)
