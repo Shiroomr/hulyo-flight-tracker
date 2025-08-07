@@ -85,7 +85,7 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                 print(f"❌ Error with destination {i + 1}: {e}", flush=True)
 
         if flights:
-            with open("hulyo_flights.csv", "w", newline="", encoding="utf-8") as f:
+            with open("hulyo_flights.csv", "w", newline="", encoding="utf-8-sig") as f:
                 writer = csv.DictWriter(f, fieldnames=[
                     "destination", "departure_date", "return_date",
                     "departure_time", "return_time", "price"
