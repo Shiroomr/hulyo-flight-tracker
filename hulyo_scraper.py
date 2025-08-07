@@ -2,19 +2,18 @@ from playwright.sync_api import sync_playwright
 import csv
 import time
 from datetime import datetime
-from dateutil import parser
 import locale
 
 def scrape_hulyo_flights(max_flights_to_extract=100):
     extraction_date_obj = datetime.now().date()
     extraction_date_str = extraction_date_obj.strftime("%Y-%m-%d")
-    extraction_weekday = extraction_date_obj.strftime("%A")  # English full name (e.g., "Monday")
-
+    extraction_weekday = extraction_date_obj.strftime("%A")
 
     try:
         locale.setlocale(locale.LC_TIME, 'he_IL.utf8')
     except:
         pass
+
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
@@ -75,31 +74,35 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                                 currency = card.query_selector("._currency-v2-FLIGHTS_1h6v0_109").inner_text().strip()
                                 departure_raw = labels[0].inner_text().strip() if labels else ""
                                 return_raw = labels[1].inner_text().strip() if len(labels) > 1 else ""
-    
-                            try:
-                                departure_parts = departure_raw.split()
-                                departure_date_obj = datetime.strptime(departure_parts[0], "%d.%m.%y").date()
-                                departure_date_str = departure_date_obj.strftime("%Y-%m-%d")
-                                departure_weekday = departure_parts[1] if len(departure_parts) > 1 else ""
-                            except:
-                                departure_date_str = departure_raw
-                                departure_weekday = ""
-                            
-                            try:
-                                return_parts = return_raw.split()
-                                return_date_obj = datetime.strptime(return_parts[0], "%d.%m.%y").date()
-                                return_date_str = return_date_obj.strftime("%Y-%m-%d")
-                                return_weekday = return_parts[1] if len(return_parts) > 1 else ""
-                            except:
-                                return_date_str = return_raw
-                                return_weekday = ""
-                            
-                            try:
-                                delta_days = (departure_date_obj - extraction_date_obj).days
-                            except:
-                                delta_days = ""
-     
-    
+
+                                # Parse departure date
+                                try:
+                                    departure_parts = departure_raw.split()
+                                    departure_date_obj = datetime.strptime(departure_parts[0], "%d.%m.%y").date()
+                                    departure_date_str = departure_date_obj.strftime("%Y-%m-%d")
+                                    departure_weekday = departure_parts[1] if len(departure_parts) > 1 else ""
+                                except:
+                                    departure_date_str = departure_raw
+                                    departure_weekday = ""
+                                    departure_date_obj = None
+
+                                # Parse return date
+                                try:
+                                    return_parts = return_raw.split()
+                                    return_date_obj = datetime.strptime(return_parts[0], "%d.%m.%y").date()
+                                    return_date_str = return_date_obj.strftime("%Y-%m-%d")
+                                    return_weekday = return_parts[1] if len(return_parts) > 1 else ""
+                                except:
+                                    return_date_str = return_raw
+                                    return_weekday = ""
+                                    return_date_obj = None
+
+                                # Delta days
+                                try:
+                                    delta_days = (departure_date_obj - extraction_date_obj).days if departure_date_obj else ""
+                                except:
+                                    delta_days = ""
+
                                 flights.append({
                                     "departure_date": departure_date_str,
                                     "departure_weekday": departure_weekday,
@@ -128,7 +131,7 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
 
         if flights:
             with open("hulyo_flights.csv", "w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.DictWriter(f, fieldnames = [
+                writer = csv.DictWriter(f, fieldnames=[
                     "departure_date",
                     "departure_weekday",
                     "return_date",
