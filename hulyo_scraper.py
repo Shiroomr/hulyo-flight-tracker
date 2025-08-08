@@ -3,6 +3,7 @@ import csv
 import time
 from datetime import datetime
 import locale
+import os
 
 def scrape_hulyo_flights(max_flights_to_extract=100):
     extraction_date_obj = datetime.now().date()
