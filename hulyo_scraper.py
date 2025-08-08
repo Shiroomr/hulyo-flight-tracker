@@ -7,7 +7,7 @@ import os
 
 def scrape_hulyo_flights(max_flights_to_extract=100):
     extraction_date_obj = datetime.now().date()
-    extraction_date_str = extraction_date_obj.strftime("%Y-%m-%d")
+    extraction_date_str = extraction_date_obj.strftime("%Y-%m-%d %H:%M")
     extraction_weekday = extraction_date_obj.strftime("%A")
 
     try:
