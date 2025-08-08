@@ -131,8 +131,10 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                 print(f"❌ Error with destination {i + 1}: {e}", flush=True)
 
         if flights:
-            with open("hulyo_flights.csv", "w", newline="", encoding="utf-8-sig") as f:
-                writer = csv.DictWriter(f, fieldnames=[
+            file_exists = os.path.isfile("hulyo_flights.csv")
+
+            with open("hulyo_flights.csv", "a", newline="", encoding="utf-8-sig") as f:
+                fieldnames = [
                     "destination_name",
                     "departure_date",
                     "departure_weekday",
@@ -144,10 +146,13 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                     "extractionDate",
                     "extraction_weekday",
                     "delta_days"
-                ])
-                writer.writeheader()
+                ]
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                if not file_exists:
+                    writer.writeheader()
                 writer.writerows(flights)
-            print(f"✅ {flight_count} flights saved to hulyo_flights.csv", flush=True)
+
+            print(f"✅ {flight_count} flights appended to hulyo_flights.csv", flush=True)
         else:
             print("⚠️ No flights scraped", flush=True)
 
