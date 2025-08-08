@@ -133,7 +133,7 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                 print(f"❌ Error with destination {i + 1}: {e}", flush=True)
 
         if flights:
-            file_exists = os.path.isfile("hulyo_flights.csv")
+            file_exists = os.path.exists("hulyo_flights.csv")
 
             with open("hulyo_flights.csv", "a", newline="", encoding="utf-8-sig") as f:
                 fieldnames = [
