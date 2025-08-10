@@ -72,8 +72,12 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                                 break
                             try:
                                 labels = card.query_selector_all("._label-v2_1h6v0_75")
-                                price = card.query_selector("._price-v2_1h6v0_102").inner_text().strip()
-                                currency = card.query_selector("._currency-v2-FLIGHTS_1h6v0_109").inner_text().strip()
+                                price_text = card.query_selector("._price-v2_1h6v0_102").inner_text().strip()
+                                currency_text = card.query_selector("._currency-v2-FLIGHTS_1h6v0_109").inner_text().strip()
+
+                                # Keep only numbers in price
+                                price_value = ''.join([c for c in price_text if c.isdigit() or c == '.'])
+
                                 departure_raw = labels[0].inner_text().strip() if labels else ""
                                 return_raw = labels[1].inner_text().strip() if len(labels) > 1 else ""
 
@@ -105,18 +109,26 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
                                 except:
                                     delta_days = ""
 
+                                # Duration days
+                                try:
+                                    duration = (return_date_obj - departure_date_obj).days
+                                except:
+                                    duration = ""
+
                                 flights.append({
-                                    "destination_name": destination_name,
-                                    "departure_date": departure_date_str,
-                                    "departure_weekday": departure_weekday,
-                                    "return_date": return_date_str,
-                                    "return_weekday": return_weekday,
-                                    "departure_time": labels[2].inner_text().strip().replace("בשעה", "").strip() if len(labels) > 2 else "",
-                                    "return_time": labels[3].inner_text().strip().replace("בשעה", "").strip() if len(labels) > 3 else "",
-                                    "price": f"{price} {currency}",
                                     "extractionDate": extraction_date_str,
                                     "extraction_weekday": extraction_weekday,
-                                    "delta_days": delta_days
+                                    "delta_days": delta_days,
+                                    "destination_name": destination_name,
+                                    "duration": duration,
+                                    "departure_date": departure_date_str,
+                                    "departure_weekday": departure_weekday,
+                                    "departure_time": labels[2].inner_text().strip().replace("בשעה", "").strip() if len(labels) > 2 else "",
+                                    "return_date": return_date_str,
+                                    "return_weekday": return_weekday,
+                                    "return_time": labels[3].inner_text().strip().replace("בשעה", "").strip() if len(labels) > 3 else "",
+                                    "price": price_value,
+                                    "price_currency": currency_text
                                 })
                                 flight_count += 1
                             except Exception as e:
@@ -137,17 +149,19 @@ def scrape_hulyo_flights(max_flights_to_extract=100):
 
             with open("hulyo_flights.csv", "a", newline="", encoding="utf-8-sig") as f:
                 fieldnames = [
-                    "destination_name",
-                    "departure_date",
-                    "departure_weekday",
-                    "return_date",
-                    "return_weekday",
-                    "departure_time",
-                    "return_time",
-                    "price",
                     "extractionDate",
                     "extraction_weekday",
-                    "delta_days"
+                    "delta_days",
+                    "destination_name",
+                    "duration",
+                    "departure_date",
+                    "departure_weekday",
+                    "departure_time",
+                    "return_date",
+                    "return_weekday",
+                    "return_time",
+                    "price",
+                    "price_currency"   
                 ]
                 writer = csv.DictWriter(f, fieldnames=fieldnames)
                 if not file_exists:
