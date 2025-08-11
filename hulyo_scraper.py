@@ -5,7 +5,7 @@ from datetime import datetime
 import locale
 import os
 
-def scrape_hulyo_flights(max_flights_to_extract=1000000):
+def scrape_hulyo_flights(max_flights_to_extract=100):
     extraction_dt = datetime.now()
     extraction_date_str = extraction_dt.strftime("%Y-%m-%d %H:%M")
     extraction_date_obj = extraction_dt.date()
@@ -175,4 +175,4 @@ def scrape_hulyo_flights(max_flights_to_extract=1000000):
         browser.close()
 
 if __name__ == "__main__":
-    scrape_hulyo_flights(max_flights_to_extract=100)
+    scrape_hulyo_flights(max_flights_to_extract=1000000)
