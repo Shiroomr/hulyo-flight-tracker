@@ -5,7 +5,7 @@ from datetime import datetime
 import locale
 import os
 
-def scrape_hulyo_flights(max_flights_to_extract=100):
+def scrape_hulyo_flights(max_flights_to_extract=1000000):
     extraction_dt = datetime.now()
     extraction_date_str = extraction_dt.strftime("%Y-%m-%d %H:%M")
     extraction_date_obj = extraction_dt.date()
